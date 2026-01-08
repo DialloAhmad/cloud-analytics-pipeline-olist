@@ -1,0 +1,120 @@
+version: 2
+
+models:
+  # ----------------------------------------------------
+  # 1. DIMENSION DATE
+  # ----------------------------------------------------
+  - name: dim_date
+    description: "Calendrier généré pour le Time Intelligence. Granularité : Jour."
+    columns:
+      - name: date_id
+        tests:
+          - unique
+          - not_null
+      - name: year
+      - name: month
+      - name: day_of_week
+      - name: is_weekend
+
+  # ----------------------------------------------------
+  # 2. DIMENSION ORDERS 
+  # ----------------------------------------------------
+  - name: dim_orders
+    description: "Infos contextuelles de la commande (Dates, Statut, Retards)."
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+      - name: is_delayed
+        description: "Flag booléen : True si livré après la date estimée."
+        tests:
+          - not_null
+
+  # ----------------------------------------------------
+  # 3. DIMENSION PRODUCTS
+  # ----------------------------------------------------
+  - name: dim_products
+    description: "Catalogue produits enrichi avec le volume."
+    columns:
+      - name: product_id
+        tests:
+          - unique
+          - not_null
+      - name: product_volume_cm3
+        description: "Volume calculé (L x H x l)."
+
+  # ----------------------------------------------------
+  # 4. DIMENSION SELLERS
+  # ----------------------------------------------------
+  - name: dim_sellers
+    description: "Répertoire des vendeurs."
+    columns:
+      - name: seller_id
+        tests:
+          - unique
+          - not_null
+
+  # ----------------------------------------------------
+  # 5. DIMENSION CUSTOMERS (Vision 360)
+  # ----------------------------------------------------
+  - name: dim_customers
+    description: "Référentiel clients uniques (Dédoublonné)."
+    columns:
+      - name: customer_unique_id
+        description: "Clé primaire (Attention: ce n'est pas le customer_id de la commande)."
+        tests:
+          - unique
+          - not_null
+
+# ----------------------------------------------------
+# 6. FACT SALES (La table centrale)
+# ----------------------------------------------------
+  - name: fact_sales
+    description: "Table de faits des ventes. Granularité => Ligne de commande (Item)"
+    columns:
+      - name: sale_sk
+        description: "Clé primaire SURROGATE KEY"
+        tests:
+          - unique
+          - not_null
+
+      - name: order_id
+        tests:
+          - not_null
+          - relationships: # Vérifie que la commande existe dans la dimension
+              arguments:
+                to: ref('dim_orders')
+                field: order_id
+
+      - name: product_id
+        tests:
+          - not_null
+          - relationships: # Vérifie que le produit existe
+              arguments:
+                to: ref('dim_products')
+                field: product_id
+
+      - name: seller_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_sellers')
+                field: seller_id
+
+      - name: customer_unique_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customers')
+                field: customer_unique_id
+
+      - name: date_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_id

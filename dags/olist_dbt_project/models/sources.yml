@@ -1,0 +1,52 @@
+version: 2
+
+sources:
+  - name: olist_raw   # Nom de la source
+    database: OLIST_DB
+    schema: RAW
+    description: "Données brutes importées depuis le bucket S3"
+    
+    tables:
+      - name: RAW_ORDERS
+        description: "Table centrale des commandes. Une ligne = une commande."
+        # Tests de qualité des données pour la table RAW_ORDERS
+        columns:
+          - name: ORDER_ID
+            tests:
+              - unique
+              - not_null
+
+      - name: RAW_ITEMS
+        description: "Détail des articles par commande (One-to-Many avec Orders)."
+        columns:
+          - name: ORDER_ID
+            tests:
+              - not_null
+
+      - name: RAW_CUSTOMERS
+        description: "Info clients (Zip code, Ville, ID unique)."
+        columns:
+          - name: CUSTOMER_ID
+            tests:
+              - unique
+              - not_null
+
+      - name: RAW_PRODUCTS
+        description: "Catalogue produits (Catégorie, dimensions)."
+        columns:
+          - name: PRODUCT_ID
+            tests:
+              - unique
+              - not_null
+
+      - name: RAW_SELLERS
+        description: "Info vendeurs."
+        columns:
+          - name: SELLER_ID
+            tests:
+              - unique
+              - not_null
+
+      - name: RAW_PAYMENTS
+        description: "Détail des paiements (Sequentiel)."
+        

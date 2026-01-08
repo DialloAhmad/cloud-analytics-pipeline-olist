@@ -1,0 +1,124 @@
+version: 2
+
+models:
+  # ----------------------------------------------------
+  # 1. ORDERS
+  # ----------------------------------------------------
+  - name: stg_orders
+    description: "Table des commandes nettoyée."
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
+
+      - name: order_status
+        tests:
+          - accepted_values: # On vérifie que le status est valide
+              arguments:
+                values: ['delivered', 'shipped', 'canceled', 'unavailable', 'invoiced', 'processing', 'created', 'approved']
+
+  # ----------------------------------------------------
+  # 2. ITEMS
+  # ----------------------------------------------------
+  - name: stg_order_items
+    description: "Détail des articles commandés. Granularité : Ligne de commande."
+    columns:
+      - name: order_id
+        tests:
+          - not_null
+          - relationships: # Chaque item doit référencer une commande existante
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
+
+      - name: product_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_products')
+                field: product_id
+          
+      - name: seller_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_sellers')
+                field: seller_id
+
+  # ----------------------------------------------------
+  # 3. PRODUCTS
+  # ----------------------------------------------------
+  - name: stg_products
+    description: "Catalogue des produits nettoyé."
+    columns:
+      - name: product_id
+        tests:
+          - unique
+          - not_null
+
+      - name: category_name
+        tests:
+          - not_null # Les NULLs ont été géré avec coalesce dans le SQL
+
+  # ----------------------------------------------------
+  # 4. CUSTOMERS
+  # ----------------------------------------------------
+  - name: stg_customers
+    columns:
+      - name: customer_id
+        description: "Clé liée à une commande spécifique."
+        tests:
+          - unique
+          - not_null
+
+      - name: customer_unique_id
+        description: "ID unique du client."
+        tests:
+          - not_null
+
+  # ----------------------------------------------------
+  # 5. SELLERS
+  # ----------------------------------------------------
+  - name: stg_sellers
+    columns:
+      - name: seller_id
+        tests:
+          - unique
+          - not_null
+
+  # ----------------------------------------------------
+  # 6. PAYMENTS
+  # ----------------------------------------------------
+  - name: stg_payments
+    description: "Détail des paiements par commande."
+    columns:
+      - name: order_id
+        tests:
+          - not_null
+          - relationships: # Pas de paiement sans commande associée
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
+
+      - name: payment_type
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['credit_card', 'boleto', 'voucher', 'debit_card', 'not_defined']
+              
+      - name: payment_value
+        tests:
+          - not_null
+
+
