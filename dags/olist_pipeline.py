@@ -39,7 +39,8 @@ with DAG(
     dag_id="olist_ingestion_pipeline",
     default_args=default_args,
     start_date=datetime(2023, 1, 1),
-    schedule_interval="*/15 * * * *",
+    schedule_interval=None, # Pas de planification automatique
+    # schedule_interval="*/15 * * * *", # Toutes les 15 minutes
     catchup=False,
 ) as dag:
 
