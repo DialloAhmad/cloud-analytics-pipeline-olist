@@ -4,8 +4,8 @@ import os
 import shutil
 
 # Config
-INPUT_DIR = 'C:/Users/Ahmad Diallo/Documents/cloud_native_pipeline/olist_data/'  
-OUTPUT_BASE_DIR = 'C:/Users/Ahmad Diallo/Documents/cloud_native_pipeline/olist_data/split_data/' 
+INPUT_DIR = '/olist_data/'  
+OUTPUT_BASE_DIR = 'olist_data/split_data/' 
 NUM_CHUNKS = 10 # Nombre de split
 
 # Chemins des fichiers sources

@@ -4,7 +4,7 @@ import json
 import time
 
 # Config 
-BUCKET_NAME = 'olist-ecom-bucket' 
+BUCKET_NAME = 'bucket' 
 LOCAL_SPLIT_DIR = 'include/data'
 STATE_FILE = 'upload_state.json'
 
