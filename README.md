@@ -1,45 +1,99 @@
-Overview
-========
+## 📋 Présentation du Projet
 
-Welcome to Astronomer! This project was generated after you ran 'astro dev init' using the Astronomer CLI. This readme describes the contents of the project, as well as how to run Apache Airflow on your local machine.
+Ce projet démontre la mise en place d'une infrastructure **Data Engineering moderne et automatisée**.
+L'objectif était de simuler un environnement de production réel où les données transactionnelles arrivent en continu, sont ingérées automatiquement, transformées via des modèles analytiques, et visualisées en quasi temps réel.
 
-Project Contents
-================
+J'ai utilisé le dataset public **Olist E-Commerce**, en simulant un flux de données progressif (batch processing) pour orchestrer une pipeline complète ELT.
 
-Your Astro project contains the following files and folders:
+## 🏗️ Architecture du Pipeline
 
-- dags: This folder contains the Python files for your Airflow DAGs. By default, this directory includes one example DAG:
-    - `example_astronauts`: This DAG shows a simple ETL pipeline example that queries the list of astronauts currently in space from the Open Notify API and prints a statement for each astronaut. The DAG uses the TaskFlow API to define tasks in Python, and dynamic task mapping to dynamically print a statement for each astronaut. For more on how this DAG works, see our [Getting started tutorial](https://www.astronomer.io/docs/learn/get-started-with-airflow).
-- Dockerfile: This file contains a versioned Astro Runtime Docker image that provides a differentiated Airflow experience. If you want to execute other commands or overrides at runtime, specify them here.
-- include: This folder contains any additional files that you want to include as part of your project. It is empty by default.
-- packages.txt: Install OS-level packages needed for your project by adding them to this file. It is empty by default.
-- requirements.txt: Install Python packages needed for your project by adding them to this file. It is empty by default.
-- plugins: Add custom or community plugins for your project to this file. It is empty by default.
-- airflow_settings.yaml: Use this local-only file to specify Airflow Connections, Variables, and Pools instead of entering them in the Airflow UI as you develop DAGs in this project.
+![Architecture Diagram](images/Dataset_Olist_pipeline.jpg)
 
-Deploy Your Project Locally
-===========================
+### Le flux de données étape par étape :
 
-Start Airflow on your local machine by running 'astro dev start'.
+1.  **Data Generation :** Un script Python découpe les fichiers volumineux (`orders`, `order_items`) en 10 lots (chunks) pour simuler une arrivée de données quotidienne/horaire.
+2.  **Orchestration (Airflow) :** Un DAG Airflow (géré via **Astro CLI** et **Cosmos**) upload un chunk vers AWS S3.
+3.  **Continuous Ingestion (Snowpipe) :** Configuration d'un système **Event-Driven** (AWS S3 Event Notification -> SQS -> Snowpipe). Dès qu'un fichier atterrit sur S3, Snowflake l'ingère automatiquement dans la couche `RAW`.
+4.  **Transformation (dbt) :** Airflow déclenche les modèles dbt (via Cosmos) *uniquement* après avoir confirmé l'ingestion des données par Snowpipe, transformant les données brutes en un modèle en étoile (Kimball).
+5.  **Visualization :** Power BI est connecté en **Direct Query** à Snowflake pour des tableaux de bord à jour instantanément.
 
-This command will spin up five Docker containers on your machine, each for a different Airflow component:
+## 🛠️ Focus Technique & Défis relevés
 
-- Postgres: Airflow's Metadata Database
-- Scheduler: The Airflow component responsible for monitoring and triggering tasks
-- DAG Processor: The Airflow component responsible for parsing DAGs
-- API Server: The Airflow component responsible for serving the Airflow UI and API
-- Triggerer: The Airflow component responsible for triggering deferred tasks
+### 1. Ingestion "Event-Driven" avec Snowpipe
+Au lieu d'un chargement manuel (`COPY INTO`), j'ai mis en place une automatisation via **AWS SNS/SQS**.
+*   **Challenge :** Synchroniser l'orchestrateur (Airflow) avec un processus asynchrone (Snowpipe).
+*   **Solution :** Le DAG Airflow upload le fichier, puis attend que la pipe soit "flushed" avant de lancer la suite.
 
-When all five containers are ready the command will open the browser to the Airflow UI at http://localhost:8080/. You should also be able to access your Postgres Database at 'localhost:5432/postgres' with username 'postgres' and password 'postgres'.
+![Capture Snowflake Pipe](images/snowpipe_loading_history.png)
 
-Note: If you already have either of the above ports allocated, you can either [stop your existing Docker containers or change the port](https://www.astronomer.io/docs/astro/cli/troubleshoot-locally#ports-are-not-available-for-my-local-airflow-webserver).
+### 2. Orchestration avancée avec Airflow & Cosmos
+J'ai utilisé la bibliothèque **Cosmos** pour intégrer dbt comme citoyen de première classe dans Airflow. Cela permet de visualiser chaque modèle dbt comme une tâche distincte dans le DAG.
 
-Deploy Your Project to Astronomer
-=================================
+*   **Logique du DAG :** `Upload to S3` >> `Wait for Ingestion` >> `dbt Run (Staging -> Marts)` >> `Data Quality Tests`.
 
-If you have an Astronomer account, pushing code to a Deployment on Astronomer is simple. For deploying instructions, refer to Astronomer documentation: https://www.astronomer.io/docs/astro/deploy-code/
+![Capture Airflow DAG](images/airflow_batches.png)
 
-Contact
-=======
+![Capture Airflow DAG](images/airflow_dags_graph.png)
 
-The Astronomer CLI is maintained with love by the Astronomer team. To report a bug or suggest a change, reach out to our support.
+### 3. Continuous Ingestion (Snowpipe & AWS)
+Mise en place d'une architecture **Event-Driven** (pilotée par événements) pour assurer un chargement des données en quasi temps réel, sans intervention manuelle.
+
+*   **S3 Landing Zone (Data Lake) :** Configuration des buckets S3 pour recevoir les fichiers CSV découpés (chunks). Organisation stricte des dossiers pour séparer les flux.
+    *   ![Structure du Bucket S3 - Dossiers](images/s3_olist.png)
+    *   ![Fichiers CSV Splités dans S3](images/s3_olist_orders.png)
+
+*   **Event Architecture (SNS/SQS) :** Configuration des **S3 Event Notifications** pour déclencher un message automatique via SNS/SQS à chaque nouvel upload. Cela permet de découpler le stockage de l'ingestion.
+    *   ![Configuration AWS SNS/SQS](images/sqs_suscribe.png)
+
+*   **Automated Loading (Snowpipe) :** Côté Snowflake, un **Pipe** configuré en `AUTO_INGEST=TRUE` écoute la file d'attente SQS. Dès qu'un message arrive, le fichier correspondant est chargé instantanément dans les tables `RAW`.
+
+### 4. Modélisation Dimensionnelle (dbt)
+Transformation des données brutes vers un **Star Schema** (Modèle de Kimball) optimisé pour l'analyse.
+*   **Staging :** Nettoyage, typage et déduplication.
+*   **Marts :** Création de `FACT_SALES` et des dimensions (`DIM_PRODUCTS`, `DIM_CUSTOMERS`, etc.).
+*   **Qualité :** Tests dbt (`unique`, `not_null`, `relationships`) intégrés au pipeline pour bloquer les données corrompues.
+
+![Capture dbt Lineage](images/dbt_lienage_graph.png)
+
+### 4. Advanced Analytics & Reporting (SQL)
+Validation du modèle en étoile par des requêtes analytiques complexes directement dans Snowflake.
+L'exemple ci-dessous montre une analyse des "Top Catégories Mensuelles" utilisant :
+*   **CTEs (Common Table Expressions)** pour la lisibilité.
+*   **Window Functions** (`RANK() OVER PARTITION`) pour le classement.
+*   **Joins** entre la Fact Table et les Dimensions.
+
+![Advanced SQL Query on Data Marts](images/analytique_query.png)
+
+![Advanced SQL Query on Data Marts](images/analytique_query_result.png)
+
+
+## 📊 Business Intelligence (Power BI)
+
+Le dashboard final permet de suivre les KPIs logistiques et financiers d'Olist. Grâce au **Direct Query**, toute nouvelle donnée traitée par le pipeline est immédiatement visible sans rafraîchissement manuel du dataset.
+
+**KPIs Clés :**
+*   Revenue & Croissance monthly.
+*   On-Time Delivery Rate (Performance Logistique).
+*   Analyse géographique des ventes.
+
+![Dashboard Power BI](images/olist_dasboard.png)
+
+## 🏅 Certifications & Badges Snowflake
+
+Ce projet met en application les compétences acquises lors de mes formations Snowflake.
+
+| Badge | Description |
+|:------|:------------|
+| [🔗 Data Engineering Workshop](https://achieve.snowflake.com/4a69085a-2363-4222-8c7f-98b368b9704e#acc.K6umWHng) | **Data Engineering Workshop** <br> *Ingestion, Streaming, Pipes, Tasks, Streams* |
+| [🔗 Data Lake Workshop](https://achieve.snowflake.com/95cf50e3-f66c-4f7f-bf7b-5e212bac2214#acc.hjQKqy84) | **Data Lake Workshop** <br> *External Stages, File Formats, Unstructured Data* |
+| [🔗 Data Warehousing Workshop](https://achieve.snowflake.com/eceb04a5-7082-4eab-a009-2ad245dd3fe5#acc.AJHzaXGZ) | **Data Warehousing Workshop** <br> *Computing, Scaling, Zero-Copy Cloning* |
+| [🔗 Data Application Builders](https://achieve.snowflake.com/89a954c3-936c-47d1-9f20-4baf0f16747b#acc.5yEpF4Pw) | **Data Application Builders** <br> *Connector Python, SQL API* |
+
+---
+
+## 👤 Auteur
+
+**Thierno Amadou DIALLO**
+*Cloud Data Engineer | Snowflake | AWS | dbt*
+
+[LinkedIn](https://www.linkedin.com/in/thierno-amadou-diallo-84b4481b7/)
