@@ -82,12 +82,11 @@ Le dashboard final permet de suivre les KPIs logistiques et financiers d'Olist. 
 
 Ce projet met en application les compétences acquises lors de mes formations Snowflake.
 
-| Badge | Description |
-|:------|:------------|
-| [🔗 Data Engineering Workshop](https://achieve.snowflake.com/4a69085a-2363-4222-8c7f-98b368b9704e#acc.K6umWHng) | **Data Engineering Workshop** <br> *Ingestion, Streaming, Pipes, Tasks, Streams* |
-| [🔗 Data Lake Workshop](https://achieve.snowflake.com/95cf50e3-f66c-4f7f-bf7b-5e212bac2214#acc.hjQKqy84) | **Data Lake Workshop** <br> *External Stages, File Formats, Unstructured Data* |
-| [🔗 Data Warehousing Workshop](https://achieve.snowflake.com/eceb04a5-7082-4eab-a009-2ad245dd3fe5#acc.AJHzaXGZ) | **Data Warehousing Workshop** <br> *Computing, Scaling, Zero-Copy Cloning* |
-| [🔗 Data Application Builders](https://achieve.snowflake.com/89a954c3-936c-47d1-9f20-4baf0f16747b#acc.5yEpF4Pw) | **Data Application Builders** <br> *Connector Python, SQL API* |
+*   ❄️ [**Data Engineering Workshop**](https://achieve.snowflake.com/4a69085a-2363-4222-8c7f-98b368b9704e#acc.K6umWHng)
+*   ❄️ [**Data Lake Workshop**](https://achieve.snowflake.com/95cf50e3-f66c-4f7f-bf7b-5e212bac2214#acc.hjQKqy84)
+*   ❄️ [**Data Warehousing Workshop**](https://achieve.snowflake.com/eceb04a5-7082-4eab-a009-2ad245dd3fe5#acc.AJHzaXGZ)
+*   ❄️ [**Data Application Builders Workshop**](https://achieve.snowflake.com/89a954c3-936c-47d1-9f20-4baf0f16747b#acc.5yEpF4Pw)
+*   ❄️ [**Collaboration, Marketplace & Cost Estimation**](https://achieve.snowflake.com/91c3f0d0-2376-4ef2-87af-d68dc42ec201#acc.ZOzQVcGJ)
 
 ---
 
