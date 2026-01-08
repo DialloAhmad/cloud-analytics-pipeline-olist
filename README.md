@@ -3,7 +3,16 @@
 Ce projet démontre la mise en place d'une infrastructure **Data Engineering moderne et automatisée**.
 L'objectif était de simuler un environnement de production réel où les données transactionnelles arrivent en continu, sont ingérées automatiquement, transformées via des modèles analytiques, et visualisées en quasi temps réel.
 
-J'ai utilisé le dataset public **Olist E-Commerce**, en simulant un flux de données progressif (batch processing) pour orchestrer une pipeline complète ELT.
+Le projet s’appuie sur le dataset public **Olist E-Commerce**, représentant une marketplace brésilienne reliant vendeurs indépendants et clients finaux.
+
+Au-delà de l’aspect technique, ce projet met en lumière des **enjeux business et sociétaux concrets**, notamment :
+
+* la fiabilité des délais de livraison, essentielle à la satisfaction client,
+* la performance des vendeurs selon les régions,
+* l’impact des coûts logistiques (freight) sur le chiffre d’affaires,
+* les disparités géographiques d’accès au e-commerce.
+
+Pour reproduire des conditions proches d'un environnement de production, les données ont été volontairement ingérées de manière progressive (batchs), orchestrées par Apache Airflow, afin d’évaluer les problématiques d’automatisation, de coûts et de performance propres aux plateformes data modernes.
 
 ## 🏗️ Architecture du Pipeline
 
