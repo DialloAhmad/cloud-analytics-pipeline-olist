@@ -53,7 +53,7 @@ Transformation des données brutes vers un **Star Schema** (Modèle de Kimball) 
 *   **Marts :** Création de `FACT_SALES` et des dimensions (`DIM_PRODUCTS`, `DIM_CUSTOMERS`, etc.).
 *   **Qualité :** Tests dbt (`unique`, `not_null`, `relationships`) intégrés au pipeline pour bloquer les données corrompues.
 
-![Capture dbt Lineage](images/dbt_lienage_graph.png)
+![Capture dbt Lineage](images/dbt_lineage_graph.png)
 
 ### 4. Advanced Analytics & Reporting (SQL)
 Validation du modèle en étoile par des requêtes analytiques complexes directement dans Snowflake.
@@ -76,7 +76,7 @@ Le dashboard final permet de suivre les KPIs logistiques et financiers d'Olist. 
 *   On-Time Delivery Rate (Performance Logistique).
 *   Analyse géographique des ventes.
 
-![Dashboard Power BI](images/olist_dasboard.png)
+![Dashboard Power BI](images/olist_dashboard.png)
 
 ## 🏅 Certifications & Badges Snowflake
 
