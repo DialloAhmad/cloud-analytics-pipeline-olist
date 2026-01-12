@@ -16,7 +16,7 @@ Pour reproduire des conditions proches d'un environnement de production, les don
 
 ## 🏗️ Architecture du Pipeline
 
-![Architecture Diagram](images/Dataset_Olist_pipeline.jpg)
+![Architecture Diagram](images/Dataset_Olist_pipeline.png)
 
 ### Le flux de données étape par étape :
 
